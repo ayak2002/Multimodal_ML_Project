@@ -1,0 +1,51 @@
+# Python virtual environment
+venv/
+env/
+.env/
+.venv/
+
+# Dataset and large files
+channel_adaptive_models/chammi_dataset/
+**/chammi_dataset/
+*.tiff
+*.png
+*.jpg
+*.jpeg
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Logs and databases
+*.log
+*.sqlite
+wandb/
+
+# Generated files
+**/visualization/
+**/checkpoints/
+**/results/
+**/output/ 

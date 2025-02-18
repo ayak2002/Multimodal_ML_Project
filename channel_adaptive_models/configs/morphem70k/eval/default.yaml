@@ -1,0 +1,16 @@
+batch_size: ~  ## None to auto set
+dest_dir: snapshots/{FOLDER_NAME}/results
+feature_dir: snapshots/{FOLDER_NAME}/features
+root_dir: chammi_dataset
+meta_csv_file: FILL_LATER
+classifiers:
+  - knn
+classifier: PLACE_HOLDER
+feature_file: features.npy
+use_gpu: True
+knn_metric: PLACE_HOLDER
+knn_metrics:
+  - cosine
+clean_up: False
+umap: True
+only_eval_first_and_last: False
