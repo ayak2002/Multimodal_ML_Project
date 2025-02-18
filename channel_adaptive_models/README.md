@@ -1,3 +1,5 @@
+DISCLAIMER: THIS IS THE README OF THE ORIGINAL PAPER, NOT WRITTEN BY THE OWNERS OF THIS GITHUB REPO
+
 A Pytorch implementation for channel-adaptive models in our [paper](https://arxiv.org/pdf/2310.19224.pdf). This code was tested using Pytorch 2.0 and Python 3.10.
 
 
