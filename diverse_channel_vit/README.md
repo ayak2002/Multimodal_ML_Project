@@ -1,4 +1,6 @@
-A Pytorch implementation for Diverse Channel ViT (DiChaViT) in our [paper](https://arxiv.org/pdf/2405.16419). This code was tested using Pytorch 2.4.1+cu121 and Python 3.10.
+DISCLAIMER: THIS IS THE README OF THE ORIGINAL PAPER, NOT WRITTEN BY OUR GROUP
+
+A Pytorch implementation for Diverse Channel ViT (DiChaViT) in the [paper](https://arxiv.org/pdf/2405.16419). This code was tested using Pytorch 2.4.1+cu121 and Python 3.10.
 
 
 If you find our work useful, please consider citing:
