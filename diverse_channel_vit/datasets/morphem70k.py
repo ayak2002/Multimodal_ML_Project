@@ -14,6 +14,7 @@ class SingleCellDataset(Dataset):
     """Single cell chunk."""
 
     ## define all available datasets, used for collate_fn later on
+    chunk_names = ["Allen", "CP", "HPA"]
 
     def __init__(
         self,
@@ -37,32 +38,20 @@ class SingleCellDataset(Dataset):
         @param target_labels: label column in the csv file
         @param transform: data transform to be applied on a sample.
         """
-        # assert chunk in [
-        #     "Allen",
-        #     "HPA",
-        #     "CP",
-        #     "morphem70k",
-        # ], "chunk must be one of 'Allen', 'HPA', 'CP', 'morphem70k'"
-
-        ## Note that for rebuttal, chunk can be a single, or a combination of 2 datasets, or all 3 (i.e., 'morphem70k') separated by "_",
-        # e.g., "Allen_HPA", or "Allen_CP", or "CP"
-        self.chunk_names = chunk.split("_")
-
+        assert chunk in [
+            "Allen",
+            "HPA",
+            "CP",
+            "morphem70k",
+        ], "chunk must be one of 'Allen', 'HPA', 'CP', 'morphem70k'"
         self.chunk = chunk
         self.is_train = is_train
 
         ## read csv file for the chunk
         self.metadata = pd.read_csv(csv_path)
-        ## filter by chunk if chunk is not "morphem70k"
-        if chunk == "Allen_HPA_CP":
-            pass
-        elif any(x in chunk for x in ["Allen", "HPA", "CP"]):
-            if chunk in ["Allen", "HPA", "CP"]:
-                self.metadata = self.metadata[self.metadata["chunk"] == chunk]
-            else:  ## combination of 2 datasets
-                chunk1, chunk2 = chunk.split("_")
-                ## filter, keep only rows with chunk1 or chunk2
-                self.metadata = self.metadata[self.metadata["chunk"].isin([chunk1, chunk2])]
+        if chunk in ["Allen", "HPA", "CP"]:
+            self.metadata = self.metadata[self.metadata["chunk"] == chunk]
+
         if is_train:
             self.metadata = self.metadata[self.metadata["train_test_split"] == "Train"]
 
@@ -100,7 +89,7 @@ class SingleCellDataset(Dataset):
                 "DMSO": 3,
             }
 
-        elif chunk == "morphem70k":  # all 3 chunks (i.e., "morphem70k")
+        else:  # all 3 chunks (i.e., "morphem70k")
             self.train_classes_dict = {
                 "BRD-A29260609": 0,
                 "BRD-K04185004": 1,
@@ -117,43 +106,6 @@ class SingleCellDataset(Dataset):
                 "mitochondria": 12,
                 "nuclear speckles": 13,
             }
-        else:  ## rebuttal, chunk would be 1 or 2 datasets, separated by "_", e.g., "Allen_HPA", or "Allen_CP", or "CP"
-            self.train_classes_dict = {}
-            max_val = 0
-            if "Allen" in chunk:
-                self.train_classes_dict.update(
-                    {
-                        "M0": max_val,
-                        "M1M2": max_val + 1,
-                        "M3": max_val + 2,
-                        "M4M5": max_val + 3,
-                        "M6M7_complete": max_val + 4,
-                        "M6M7_single": max_val + 5,
-                    }
-                )
-                max_val = max_val + 6
-
-            if "HPA" in chunk:
-                self.train_classes_dict.update(
-                    {
-                        "golgi apparatus": max_val,
-                        "microtubules": max_val + 1,
-                        "mitochondria": max_val + 2,
-                        "nuclear speckles": max_val + 3,
-                    }
-                )
-                max_val = max_val + 4
-
-            if "CP" in chunk:
-                self.train_classes_dict.update(
-                    {
-                        "BRD-A29260609": max_val,
-                        "BRD-K04185004": max_val + 1,
-                        "BRD-K21680192": max_val + 2,
-                        "DMSO": max_val + 3,
-                    }
-                )
-                max_val = max_val + 4
 
         self.test_classes_dict = None  ## Not defined yet
 
@@ -201,11 +153,7 @@ class SingleCellDataset(Dataset):
         else:
             label = None  ## for now, we don't need labels for evaluation. It will be provided later in evaluation code.
 
-        if self.chunk == "morphem70k" or self.chunk not in [
-            "Allen",
-            "HPA",
-            "CP",
-        ]:  ## using all 3 datasets
+        if self.chunk == "morphem70k":  ## using all 3 datasets
             chunk = self.metadata.loc[idx, "chunk"]
             if self.transform:
                 image = self.transform[chunk](image)
@@ -221,22 +169,3 @@ class SingleCellDataset(Dataset):
             else:
                 data = image
         return data
-
-
-if __name__ == "__main__":
-    data = SingleCellDataset(
-        csv_path="/projectnb/morphem/data_70k/ver2/morphem_70k_version2/morphem70k_v2.csv",
-        root_dir="/projectnb/morphem/data_70k/ver2/morphem_70k_version2",
-        chunk="Allen_CP",
-        is_train=True,
-        transform=None,
-        ssl_flag=False,
-    )
-    print(data.metadata.channel_width.unique())
-    print(data.train_classes_dict)
-    print(len(data))
-
-
-## [374 160]
-## {'M0': 0, 'M1M2': 1, 'M3': 2, 'M4M5': 3, 'M6M7_complete': 4, 'M6M7_single': 5, 'BRD-A29260609': 6, 'BRD-K04185004': 7, 'BRD-K21680192': 8, 'DMSO': 9}
-## 67420
