@@ -1,0 +1,125 @@
+# Model configuration
+model:
+  name: channelvit_adapt
+  pretrained: False
+  pretrained_model_name: "small"
+  in_dim: 1  # Single channel input
+  num_classes: 6  # For Allen dataset
+  temperature: 0.11111
+  learnable_temp: True
+  patch_size: 16
+  use_channelvit_channels: True
+  new_channel_inits: ["replicate"]
+  in_channel_names: ["DNA"]
+  enable_sample: False
+  drop_path_rate: 0.1 
+  img_size: [224] 
+  orthogonal_channel_emb_init: True 
+  freeze_channel_emb: False 
+  block_type: "block" 
+  init_first_layer: "replicate"
+  dropout_tokens_hcs: 0.0 
+
+# General configuration
+tag: ~ 
+
+# Dataset configuration
+dataset:
+  name: morphem70k
+  img_size: 224
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI
+  file_name: ../morphem70k_v2.csv
+  in_channel_names: ["DNA"]
+
+# Data chunk configuration
+data_chunk:
+  chunks:
+    - Allen: [0]
+    - CP: [4]
+
+# Training configuration
+train:
+  batch_size: 64
+  num_epochs: 15 
+  use_amp: False
+  checkpoints: unimodal_tests/checkpoints
+  save_model: "last"
+  verbose_batches: 50
+  debug: False
+  extra_loss_lambda: 0.0
+  adaptive_interface_lr: ~
+  training_chunks: "Allen"
+  miro: False
+  miro_lr_mult: 10.0
+  miro_ld: 0.01
+  swa: False
+  swad: True
+  swa_lr: 0.05
+  swa_start: 5
+  batch_strategy: "random_instance"
+  resume_train: False
+  resume_model: ~
+  clip_grad_norm: ~
+  adaptive_interface_epochs: 0
+  ssl: False
+  ssl_lambda: 0.0
+  plot_attn: False
+  seed: ~
+  tps_prob: 0.0
+
+# Hardware configuration
+hardware:
+  multi_gpus: ~
+  device: "cuda"
+  num_workers: 4
+
+# Logging configuration
+logging:
+  wandb:
+    use_wandb: False  # Disabled wandb logging due to permission issues
+    project_name: "single_channel_adapt"
+    log_freq: 50  # Added parameter to control how frequently to log to wandb
+    run_name: "single_channel_train"  # Added parameter for custom wandb run name (null means auto-generate)
+  scc_jobid: ~
+  use_py_log: True  # Added parameter to enable Python logging
+
+# Optimizer configuration
+optimizer:
+  name: adamw
+  params:
+    lr: 1e-4
+    weight_decay: 0.05
+    weight_decay_end: -1
+
+# Scheduler configuration
+scheduler:
+  name: cosine
+  params:
+    t_initial: 15
+    warmup_t: 5
+    warmup_lr_init: 1e-6
+    lr_min: 1e-6
+  convert_to_batch: False
+
+# Evaluation configuration
+eval:
+  batch_size: ~
+  dest_dir: snapshots/results/{FOLDER_NAME}/results
+  feature_dir: snapshots/feat_outputs/{FOLDER_NAME}/features
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI
+  meta_csv_file: enriched_meta.csv
+  classifier: knn
+  classifiers:
+    - knn
+  feature_file: features.npy
+  use_gpu: True
+  knn_metrics:
+    - cosine
+  clean_up: True
+  umap: False
+  only_eval_first_and_last: False
+  skip_eval_for_debug: True  # Skip initial evaluation to debug training first
+  every_n_epochs: 5
+  eval_subset_channels: False
+  channel_combinations: ~
+  eval_chunks: ["Allen", "CP"]  

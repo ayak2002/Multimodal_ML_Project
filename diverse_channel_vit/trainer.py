@@ -14,45 +14,47 @@ import torch
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
 from collections import defaultdict
+from torch.optim.swa_utils import AveragedModel, SWALR
 
 from omegaconf import OmegaConf, ListConfig
 from torch import nn, Tensor
 from tqdm import tqdm
 import gc
-import models
-import utils
-from utils import get_gpu_mem
-from morphem.benchmark import run_benchmark
-from helper_classes.best_result import BestResult
-from config import MyConfig
-from datasets.dataset_utils import (
+
+from diverse_channel_vit import models
+from diverse_channel_vit import utils
+from diverse_channel_vit.utils import get_gpu_mem
+from diverse_channel_vit.morphem.benchmark import run_benchmark
+from diverse_channel_vit.helper_classes.best_result import BestResult
+from diverse_channel_vit.config import MyConfig
+from diverse_channel_vit.datasets.dataset_utils import (
     get_channel,
     get_train_val_test_loaders,
     get_classes,
     make_random_instance_train_loader,
 )
-from helper_classes.channel_pooling_type import ChannelPoolingType
-from helper_classes.first_layer_init import FirstLayerInit
-from helper_classes.datasplit import DataSplit
-from models import model_utils
-from models.depthwise_convnext import DepthwiseConvNeXt
-from models.hypernet_convnext import HyperConvNeXt
-from models.loss_fn import proxy_loss
-from models.shared_convnext import SharedConvNeXt
-from lr_schedulers import create_my_scheduler
-from models.slice_param_convnext import SliceParamConvNeXt
-from models.template_mixing_convnext import TemplateMixingConvNeXt
-from models.template_mixing_vit import TemplateMixingViT
-from models.channel_vit_adapt import ChannelViTAdapt
-from models.dichavit import DiChaViT
-from models.vit_adapt import ViTAdapt
-from models.depthwise_vit import DepthwiseViTAdapt
-from models.hyper_vit import HyperViTAdapt, HyperNetViT
+from diverse_channel_vit.helper_classes.channel_pooling_type import ChannelPoolingType
+from diverse_channel_vit.helper_classes.first_layer_init import FirstLayerInit
+from diverse_channel_vit.helper_classes.datasplit import DataSplit
+from diverse_channel_vit.models import model_utils
+from diverse_channel_vit.models.depthwise_convnext import DepthwiseConvNeXt
+from diverse_channel_vit.models.hypernet_convnext import HyperConvNeXt
+from diverse_channel_vit.models.loss_fn import proxy_loss
+from diverse_channel_vit.models.shared_convnext import SharedConvNeXt
+from diverse_channel_vit.lr_schedulers import create_my_scheduler
+from diverse_channel_vit.models.slice_param_convnext import SliceParamConvNeXt
+from diverse_channel_vit.models.template_mixing_convnext import TemplateMixingConvNeXt
+from diverse_channel_vit.models.template_mixing_vit import TemplateMixingViT
+from diverse_channel_vit.models.channel_vit_adapt import ChannelViTAdapt
+from diverse_channel_vit.models.dichavit import DiChaViT
+from diverse_channel_vit.models.vit_adapt import ViTAdapt
+from diverse_channel_vit.models.depthwise_vit import DepthwiseViTAdapt
+from diverse_channel_vit.models.hyper_vit import HyperViTAdapt, HyperNetViT
 
-from optimizers import make_my_optimizer
-from utils import AverageMeter, exists
-from custom_log import MyLogging, DummyLogger
-from models.model_utils import get_shapes, MeanEncoder, VarianceEncoder
+from diverse_channel_vit.optimizers import make_my_optimizer
+from diverse_channel_vit.utils import AverageMeter, exists
+from diverse_channel_vit.custom_log import MyLogging, DummyLogger
+from diverse_channel_vit.models.model_utils import get_shapes, MeanEncoder, VarianceEncoder
 
 
 class Trainer:
@@ -405,7 +407,7 @@ class Trainer:
             start_time = time.time()
             output_list = []
             gt_list = []
-            training_chunks = "train" if self.mapper["train"] != self.mapper[split] else None
+            training_chunks = "train" if self.mapper["train"] == self.mapper[split] else None
             for bid, batch in enumerate(eval_loader):
                 if self.debug and bid > 3:
                     break
@@ -657,7 +659,11 @@ class Trainer:
                 print(f"======= channel_combinations: {channel_combinations}")
             total_iterations = len(eval_loader)
 
-            for bid, batch in tqdm(enumerate(eval_loader), total=total_iterations):
+            for bid, batch in tqdm(enumerate(eval_loader), 
+                                 total=total_iterations,
+                                 desc=f"Processing {chunk_name}",
+                                 ncols=80,
+                                 force=True):
                 x = utils.move_to_cuda(batch, self.device)
                 if channel_combinations is not None:
                     x = x[:, channel_combinations, :, :].clone()
@@ -821,14 +827,13 @@ class Trainer:
 
         return None
 
-    def train_one_batch_morphem70k(
-        self, batch: Tuple[Dict[str, Tensor], Tensor], num_updates: int, epoch: int
-    ) -> Dict:
-
+    def train_one_batch_morphem70k(self, batch: Tuple[Dict[str, Tensor], Tensor], num_updates: int, epoch: int) -> Dict:
         batch = utils.move_to_cuda(batch, self.device)
 
-        ## Zero out grads
-        self.optimizer.zero_grad()
+        # Initialize loss and extra_loss
+        loss = None
+        extra_loss = 0.0
+        chunk_processed = False
 
         if self.cfg.train.training_chunks:
             all_chunks = (
@@ -841,30 +846,28 @@ class Trainer:
 
         training_chunks = self.cfg.train.training_chunks
         init_first_layer = self.cfg.model.init_first_layer
-        ## used when pretrained=True to init the first layer of missing channels for single model mode (or shared_Net)
 
-        for chunk_name in all_chunks:
-            ## if more than 1 chunk/dataset, and chunk_name/dataset not in this batch, skip
-            if len(self.all_chunks) == 1:
-                x, y = batch
-            else:
-                if chunk_name in batch:
-                    x, y = batch[chunk_name]["image"], batch[chunk_name]["label"]
-                else:
-                    continue
+        # Handle both single chunk and multi-chunk formats
+        if len(self.all_chunks) == 1 or isinstance(batch, (tuple, list)):
+            # Direct batch format
+            x, y = batch if isinstance(batch, (tuple, list)) else (batch[0], batch[1])
+            chunk_name = all_chunks[0]  # Use the first (and only) chunk
+            chunk_processed = True
+            
             x = get_channel(
                 self.cfg.dataset.name,
                 data_channels=self.data_channels[chunk_name],
                 x=x,
                 device=self.device,
             )
+            
             with torch.cuda.amp.autocast(enabled=self.use_amp):
                 output = self._forward_model(
                     x,
                     chunk_name=chunk_name,
                     training_chunks=training_chunks,
                     init_first_layer=init_first_layer,
-                    new_channel_init=None,  # ignore when training, only used in evaluation
+                    new_channel_init=None,
                     cur_epoch=epoch,
                 )
                 if isinstance(output, tuple):
@@ -916,10 +919,83 @@ class Trainer:
                         print("loss", loss)
                         print("extra_loss", extra_loss)
                         print("extra_loss_lambda", self.extra_loss_lambda)
+        else:
+            # Multi-chunk format
+            for chunk_name in all_chunks:
+                if chunk_name in batch:
+                    x, y = batch[chunk_name]["image"], batch[chunk_name]["label"]
+                    chunk_processed = True
+                    x = get_channel(
+                        self.cfg.dataset.name,
+                        data_channels=self.data_channels[chunk_name],
+                        x=x,
+                        device=self.device,
+                    )
+                    with torch.cuda.amp.autocast(enabled=self.use_amp):
+                        output = self._forward_model(
+                            x,
+                            chunk_name=chunk_name,
+                            training_chunks=training_chunks,
+                            init_first_layer=init_first_layer,
+                            new_channel_init=None,
+                            cur_epoch=epoch,
+                        )
+                        if isinstance(output, tuple):
+                            output, extra_loss = output
+                        else:
+                            extra_loss = 0.0
 
-            ## scale loss then call backward to have scaled grads.
-            self.scaler.scale(loss).backward()
-            # loss.backward()
+                        assert self.cfg.dataset.name in ["Allen", "HPA", "CP", "morphem70k"]
+                        if self.cfg.model.learnable_temp:
+                            scale = self.model.logit_scale.exp()
+                        else:
+                            try:
+                                scale = self.model.scale
+                            except:
+                                ## dataparaallel
+                                scale = self.model.module.scale
+
+                        if self.cfg.train.miro:
+                            y_pred, inter_feats = output
+                            loss = (
+                                proxy_loss(self.model.proxies, y_pred, y, scale) + extra_loss * self.extra_loss_lambda
+                            )
+
+                            with torch.no_grad():
+                                if "base" in self.cfg.model.name:
+                                    _, pre_feats = self.pre_featurizer(x)
+                                else:
+                                    _, pre_feats = self.pre_featurizer(x, chunk=chunk_name)
+
+                            reg_loss = 0.0
+                            for f, pre_f, mean_enc, var_enc in model_utils.zip_strict(
+                                inter_feats,
+                                pre_feats,
+                                self.mean_encoders,
+                                self.var_encoders,
+                            ):
+                                # mutual information regularization
+                                mean = mean_enc(f)
+                                var = var_enc(f)
+                                vlb = (mean - pre_f).pow(2).div(var) + var.log()
+                                reg_loss += vlb.mean() / 2.0
+
+                            loss += reg_loss * self.cfg.train.miro_ld
+                        else:
+                            loss = (
+                                proxy_loss(self.model.proxies, output, y, scale) + extra_loss * self.extra_loss_lambda
+                            )
+                            if self.debug:
+                                print("loss", loss)
+                                print("extra_loss", extra_loss)
+                                print("extra_loss_lambda", self.extra_loss_lambda)
+
+        if not chunk_processed:
+            raise RuntimeError("No chunks were processed in train_one_batch_morphem70k")
+
+        ## scale loss then call backward to have scaled grads.
+        self.scaler.scale(loss).backward()
+        # loss.backward()
 
         ## after looping over all chunks, we call optimizer.step() once
         if exists(self.cfg.train.clip_grad_norm):
@@ -947,16 +1023,16 @@ class Trainer:
                             indx = len(self.wd_schedule) - 1
                         param_group["weight_decay"] = self.wd_schedule[indx]
 
+        if self.cfg.train.swad and epoch > self.cfg.train.swa_start:
+            self.swa_model.update_parameters(self.model)
+            self.swa_scheduler.step()
+
         loss_dict = {
             self.train_metric.format(split="TRAINING_LOSS", chunk_name=self.shuffle_all): loss.item(),
             "TRAINING_LOSS_SHUFFLE_ALL/channel_proxy_loss": (
                 extra_loss.item() if isinstance(extra_loss, Tensor) else 0.0
             ),
         }  ## loss on training
-
-        if self.cfg.train.swad and epoch > self.cfg.train.swa_start:
-            self.swa_model.update_parameters(self.model)
-            self.swa_scheduler.step()
 
         return loss_dict
 
