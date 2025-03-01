@@ -21,7 +21,8 @@ hydra:
       model: convnext_base
       scheduler: cosine
       optimizer: adamw
-      dataset: morphem70k_v2
+      #dataset: morphem70k_v2
+      dataset: morphem70k_v2_12channels
       logging: wandb
       hardware: default
       eval: default

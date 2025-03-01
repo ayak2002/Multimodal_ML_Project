@@ -23,7 +23,8 @@ import folded_dataset
 
 
 def configure_dataset(root_dir, dataset_name):
-    df_path = f'{root_dir}/{dataset_name}/enriched_meta.csv'
+    #df_path = f'{root_dir}/{dataset_name}/enriched_meta.csv'
+    df_path = f'/projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI/{dataset_name}/enriched_meta.csv'
     df = pd.read_csv(df_path)
     dataset = folded_dataset.SingleCellDataset(csv_file=df_path, root_dir=root_dir, target_labels='train_test_split')
 

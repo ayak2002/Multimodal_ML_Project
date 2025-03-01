@@ -143,6 +143,7 @@ class SingleCellDataset(Dataset):
 
         img_path = os.path.join(self.root_dir, self.metadata.loc[idx, "file_path"])
         channel_width = self.metadata.loc[idx, "channel_width"]
+        #print(f"Checking image path: {img_path}")
         image = skimage.io.imread(img_path)
         image = self._fold_channels(image, channel_width)
 
