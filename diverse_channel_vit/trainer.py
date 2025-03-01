@@ -88,7 +88,9 @@ class Trainer:
         self.project_name = utils.default(_project_name, "new_channels_" + self.cfg.dataset.name)
 
         self.all_chunks = [list(chunk.keys())[0] for chunk in self.cfg.data_chunk.chunks]
-        self.cfg.eval.meta_csv_file = "enriched_meta.csv"
+        #self.cfg.eval.meta_csv_file = "enriched_meta.csv"
+        self.cfg.eval.meta_csv_file = "/projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI/{dataset}/enriched_meta.csv"
+
 
         self.extra_loss_lambda = self.cfg.train.extra_loss_lambda
 
@@ -662,8 +664,8 @@ class Trainer:
             for bid, batch in tqdm(enumerate(eval_loader), 
                                  total=total_iterations,
                                  desc=f"Processing {chunk_name}",
-                                 ncols=80,
-                                 force=True):
+                                 ncols=80):
+                                 #force=True):
                 x = utils.move_to_cuda(batch, self.device)
                 if channel_combinations is not None:
                     x = x[:, channel_combinations, :, :].clone()
@@ -1162,7 +1164,7 @@ class Trainer:
         for chunk in data_chunks:
             chunk_name = list(chunk.keys())[0]
             train_loader, val_loader, test_loader = get_train_val_test_loaders(
-                use_ddp=self.use_ddp,
+                #use_ddp=self.use_ddp,
                 dataset=dataset,
                 img_size=img_size,
                 chunk_name=chunk_name,
@@ -1174,7 +1176,7 @@ class Trainer:
                 file_name=file_name,
                 tps_prob=tps_prob,
                 ssl_flag=ssl_flag,
-                channels=channels,
+                #channels=channels,
             )
 
             self.train_loaders[chunk_name] = train_loader
@@ -1200,15 +1202,15 @@ class Trainer:
             file_name=file_name,
             tps_prob=tps_prob,
             ssl_flag=ssl_flag,
-            training_chunks=training_chunks,
+            #training_chunks=training_chunks,
         )
         self.train_loaders[self.shuffle_all] = utils.default(train_loader_all, train_loader)
 
         self.num_loaders = len(data_chunks)
         training_chunks_list = training_chunks.split("_") if training_chunks else None
         self.data_classes_train, self.data_classes_test = get_classes(
-            dataset, file_name, training_chunks_list
-        )  ##
+            dataset, file_name) #training_chunks_list
+        #)  ##
 
     def _build_model(self):
         self.cfg.model.in_channel_names = self.cfg.dataset.in_channel_names

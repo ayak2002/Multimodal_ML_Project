@@ -678,7 +678,7 @@ class ChannelViTAdapt(nn.Module):
             self.classifer_head = nn.Linear(model.num_features, config.num_classes)
 
         num_proxies = config.num_classes  ## depends on the number of classes of the dataset
-        self.dim = model.norm.weight.shape[0]
+        self.dim = model.embed_dim  # Use embed_dim directly instead of trying to get it from norm layer
         self.proxies = torch.nn.Parameter((torch.randn(num_proxies, self.dim) / 8))
         init_temperature = config.temperature  # scale = sqrt(1/T)
         if self.cfg.learnable_temp:

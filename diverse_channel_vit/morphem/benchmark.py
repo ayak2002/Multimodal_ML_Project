@@ -48,7 +48,9 @@ def run_benchmark(root_dir, dest_dir, feature_dir, feature_file, classifier='knn
         umap_label     = row.umap_label
         
         features_path  = f'{feature_dir}/{dataset}/{feature_file}'
-        df_path        = f'{root_dir}/{dataset}/enriched_meta.csv'
+        #df_path        = f'{root_dir}/{dataset}/enriched_meta.csv'
+        df_path = f'/projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI/{dataset}/enriched_meta.csv'
+
         
         # Skip if features don't exist for this dataset
         if not os.path.exists(features_path):
