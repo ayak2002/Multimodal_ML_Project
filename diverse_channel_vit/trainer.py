@@ -88,7 +88,9 @@ class Trainer:
         self.project_name = utils.default(_project_name, "new_channels_" + self.cfg.dataset.name)
 
         self.all_chunks = [list(chunk.keys())[0] for chunk in self.cfg.data_chunk.chunks]
-        self.cfg.eval.meta_csv_file = "enriched_meta.csv"
+        #self.cfg.eval.meta_csv_file = "enriched_meta.csv"
+        self.cfg.eval.meta_csv_file = "/projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI/{dataset}/enriched_meta.csv"
+
 
         self.extra_loss_lambda = self.cfg.train.extra_loss_lambda
 
@@ -329,7 +331,7 @@ class Trainer:
 
         epoch_timer = utils.Time1Event()
 
-        if not self.debug and not self.cfg.eval.get("skip_eval_first_epoch", False):
+        if not self.debug and not self.cfg.eval.get("skip_eval_first_epoch", True):
             self.logger.info("Before training, evaluate:")
             self.evaluate_model(epoch=0)
 
@@ -662,8 +664,8 @@ class Trainer:
             for bid, batch in tqdm(enumerate(eval_loader), 
                                  total=total_iterations,
                                  desc=f"Processing {chunk_name}",
-                                 ncols=80,
-                                 force=True):
+                                 ncols=80):
+                                 #force=True):
                 x = utils.move_to_cuda(batch, self.device)
                 if channel_combinations is not None:
                     x = x[:, channel_combinations, :, :].clone()
@@ -773,7 +775,9 @@ class Trainer:
 
         loss_meter = collections.defaultdict(lambda: AverageMeter())
         if self.use_ddp:
-            self.train_loaders[chunk_name].sampler.set_epoch(epoch)
+            # Only call set_epoch if the sampler is a DistributedSampler
+            if hasattr(self.train_loaders[chunk_name], 'sampler') and hasattr(self.train_loaders[chunk_name].sampler, 'set_epoch'):
+                self.train_loaders[chunk_name].sampler.set_epoch(epoch)
 
         for bid, batch in enumerate(self.train_loaders[chunk_name], 1):
             num_updates = (epoch - 1) * self.updates_per_epoch + bid
@@ -888,7 +892,7 @@ class Trainer:
                 if self.cfg.train.miro:
                     y_pred, inter_feats = output
                     loss = (
-                        proxy_loss(self.model.proxies, y_pred, y, scale) + extra_loss * self.extra_loss_lambda
+                        proxy_loss(self.model.module.proxies if hasattr(self.model, 'module') else self.model.proxies, y_pred, y, scale) + extra_loss * self.extra_loss_lambda
                     )
 
                     with torch.no_grad():
@@ -913,7 +917,7 @@ class Trainer:
                     loss += reg_loss * self.cfg.train.miro_ld
                 else:
                     loss = (
-                        proxy_loss(self.model.proxies, output, y, scale) + extra_loss * self.extra_loss_lambda
+                        proxy_loss(self.model.module.proxies if hasattr(self.model, 'module') else self.model.proxies, output, y, scale) + extra_loss * self.extra_loss_lambda
                     )
                     if self.debug:
                         print("loss", loss)
@@ -958,7 +962,7 @@ class Trainer:
                         if self.cfg.train.miro:
                             y_pred, inter_feats = output
                             loss = (
-                                proxy_loss(self.model.proxies, y_pred, y, scale) + extra_loss * self.extra_loss_lambda
+                                proxy_loss(self.model.module.proxies if hasattr(self.model, 'module') else self.model.proxies, y_pred, y, scale) + extra_loss * self.extra_loss_lambda
                             )
 
                             with torch.no_grad():
@@ -983,7 +987,7 @@ class Trainer:
                             loss += reg_loss * self.cfg.train.miro_ld
                         else:
                             loss = (
-                                proxy_loss(self.model.proxies, output, y, scale) + extra_loss * self.extra_loss_lambda
+                                proxy_loss(self.model.module.proxies if hasattr(self.model, 'module') else self.model.proxies, output, y, scale) + extra_loss * self.extra_loss_lambda
                             )
                             if self.debug:
                                 print("loss", loss)
@@ -992,6 +996,14 @@ class Trainer:
 
         if not chunk_processed:
             raise RuntimeError("No chunks were processed in train_one_batch_morphem70k")
+
+        # Ensure loss is a scalar by taking the mean if it's not already a scalar
+        if loss.dim() > 0:
+            loss = loss.mean()
+            
+        # Also ensure extra_loss is a scalar if it's a tensor
+        if isinstance(extra_loss, Tensor) and extra_loss.dim() > 0:
+            extra_loss = extra_loss.mean()
 
         ## scale loss then call backward to have scaled grads.
         self.scaler.scale(loss).backward()
@@ -1033,7 +1045,6 @@ class Trainer:
                 extra_loss.item() if isinstance(extra_loss, Tensor) else 0.0
             ),
         }  ## loss on training
-
         return loss_dict
 
     def train_one_batch_regular(
@@ -1162,7 +1173,7 @@ class Trainer:
         for chunk in data_chunks:
             chunk_name = list(chunk.keys())[0]
             train_loader, val_loader, test_loader = get_train_val_test_loaders(
-                use_ddp=self.use_ddp,
+                #use_ddp=self.use_ddp,
                 dataset=dataset,
                 img_size=img_size,
                 chunk_name=chunk_name,
@@ -1174,7 +1185,7 @@ class Trainer:
                 file_name=file_name,
                 tps_prob=tps_prob,
                 ssl_flag=ssl_flag,
-                channels=channels,
+                #channels=channels,
             )
 
             self.train_loaders[chunk_name] = train_loader
@@ -1200,15 +1211,15 @@ class Trainer:
             file_name=file_name,
             tps_prob=tps_prob,
             ssl_flag=ssl_flag,
-            training_chunks=training_chunks,
+            #training_chunks=training_chunks,
         )
         self.train_loaders[self.shuffle_all] = utils.default(train_loader_all, train_loader)
 
         self.num_loaders = len(data_chunks)
         training_chunks_list = training_chunks.split("_") if training_chunks else None
         self.data_classes_train, self.data_classes_test = get_classes(
-            dataset, file_name, training_chunks_list
-        )  ##
+            dataset, file_name) #training_chunks_list
+        #)  ##
 
     def _build_model(self):
         self.cfg.model.in_channel_names = self.cfg.dataset.in_channel_names
@@ -1421,3 +1432,4 @@ class Trainer:
         )
 
         return None
+
