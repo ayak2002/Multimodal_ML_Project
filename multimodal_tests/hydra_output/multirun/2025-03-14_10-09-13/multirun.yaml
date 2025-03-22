@@ -1,0 +1,288 @@
+hydra:
+  run:
+    dir: /projectnb/cs598/students/ayak/multimodal_tests/hydra_output/2025-03-14_10-09-13
+  sweep:
+    dir: /projectnb/cs598/students/ayak/multimodal_tests/hydra_output/multirun/2025-03-14_10-09-13
+    subdir: ${hydra.job.num}
+  launcher:
+    _target_: hydra._internal.core_plugins.basic_launcher.BasicLauncher
+  sweeper:
+    _target_: hydra._internal.core_plugins.basic_sweeper.BasicSweeper
+    max_batch_size: null
+    params:
+      train: random_instance
+      data_chunk: morphem70k
+      model: convnext_base
+      scheduler: cosine
+      optimizer: adamw
+      dataset: morphem70k_v2
+      logging: wandb
+      hardware: default
+      eval: default
+      attn_pooling: none
+  help:
+    app_name: ${hydra.job.name}
+    header: '${hydra.help.app_name} is powered by Hydra.
+
+      '
+    footer: 'Powered by Hydra (https://hydra.cc)
+
+      Use --hydra-help to view Hydra specific help
+
+      '
+    template: '${hydra.help.header}
+
+      == Configuration groups ==
+
+      Compose your configuration from those groups (group=option)
+
+
+      $APP_CONFIG_GROUPS
+
+
+      == Config ==
+
+      Override anything in the config (foo.bar=value)
+
+
+      $CONFIG
+
+
+      ${hydra.help.footer}
+
+      '
+  hydra_help:
+    template: 'Hydra (${hydra.runtime.version})
+
+      See https://hydra.cc for more info.
+
+
+      == Flags ==
+
+      $FLAGS_HELP
+
+
+      == Configuration groups ==
+
+      Compose your configuration from those groups (For example, append hydra/job_logging=disabled
+      to command line)
+
+
+      $HYDRA_CONFIG_GROUPS
+
+
+      Use ''--cfg hydra'' to Show the Hydra config.
+
+      '
+    hydra_help: ???
+  hydra_logging:
+    version: 1
+    formatters:
+      simple:
+        format: '[%(asctime)s][HYDRA] %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: simple
+        stream: ext://sys.stdout
+    root:
+      level: INFO
+      handlers:
+      - console
+    loggers:
+      logging_example:
+        level: DEBUG
+    disable_existing_loggers: false
+  job_logging:
+    version: 1
+    formatters:
+      simple:
+        format: '[%(asctime)s][%(name)s][%(levelname)s] - %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: simple
+        stream: ext://sys.stdout
+      file:
+        class: logging.FileHandler
+        formatter: simple
+        filename: ${hydra.runtime.output_dir}/${hydra.job.name}.log
+    root:
+      level: INFO
+      handlers:
+      - console
+      - file
+    disable_existing_loggers: false
+  env: {}
+  mode: MULTIRUN
+  searchpath: []
+  callbacks: {}
+  output_subdir: .hydra
+  overrides:
+    hydra:
+    - ++hydra.run.dir=/projectnb/cs598/students/ayak/multimodal_tests/hydra_output/2025-03-14_10-09-13
+    - ++hydra.sweep.dir=/projectnb/cs598/students/ayak/multimodal_tests/hydra_output/multirun/2025-03-14_10-09-13
+    - hydra.mode=MULTIRUN
+    task:
+    - model=dichavit
+    - ++model.enable_sample=True
+    - ++model.pretrained_model_name=small
+    - tag=chammi_demo
+    - dataset=morphem70k_v2_12channels
+    - hardware=dp
+    - ++optimizer.params.lr=0.00004
+    - ++model.temperature=0.07
+    - ++train.num_epochs=60
+    - ++train.save_model=last
+    - ++model.new_channel_inits=[zero]
+    - ++train.batch_size=64
+    - ++eval.batch_size=256
+    - ++train.debug=False
+    - ++eval.every_n_epochs=6
+    - ++eval.skip_eval_first_epoch=False
+    - ++train.tps_prob=0.2
+    - ++model.orthogonal_channel_emb_init=True
+    - ++train.extra_loss_lambda=1
+    - ++model.proxy_loss_lambda=0.1
+    - ++model.ortho_loss_v1_lambda=1
+    - ++model.gamma_s=0.5
+    - ++model.gamma_d=2
+    - ++model.reverse_pos_pairs=True
+    - ++train.seed=2025
+    - ++logging.wandb.run_name=C-dichavit
+    - ++model.hcs_sampling=lowest_cosine_prob
+    - ++train.checkpoints=/projectnb/cs598/students/ayak/multimodal_tests/checkpoints
+    - ++eval.dest_dir=/projectnb/cs598/students/ayak/multimodal_tests/results/multimodal_tests_2025-03-14_10-09-13/results
+    - ++eval.feature_dir=/projectnb/cs598/students/ayak/multimodal_tests/features/multimodal_tests_2025-03-14_10-09-13/features
+    - ++hardware.num_workers=4
+    - ++logging.wandb.project=dichavit_test
+    - ++logging.wandb.entity=ayak-boston-university
+  job:
+    name: main
+    chdir: null
+    override_dirname: ++eval.batch_size=256,++eval.dest_dir=/projectnb/cs598/students/ayak/multimodal_tests/results/multimodal_tests_2025-03-14_10-09-13/results,++eval.every_n_epochs=6,++eval.feature_dir=/projectnb/cs598/students/ayak/multimodal_tests/features/multimodal_tests_2025-03-14_10-09-13/features,++eval.skip_eval_first_epoch=False,++hardware.num_workers=4,++logging.wandb.entity=ayak-boston-university,++logging.wandb.project=dichavit_test,++logging.wandb.run_name=C-dichavit,++model.enable_sample=True,++model.gamma_d=2,++model.gamma_s=0.5,++model.hcs_sampling=lowest_cosine_prob,++model.new_channel_inits=[zero],++model.ortho_loss_v1_lambda=1,++model.orthogonal_channel_emb_init=True,++model.pretrained_model_name=small,++model.proxy_loss_lambda=0.1,++model.reverse_pos_pairs=True,++model.temperature=0.07,++optimizer.params.lr=0.00004,++train.batch_size=64,++train.checkpoints=/projectnb/cs598/students/ayak/multimodal_tests/checkpoints,++train.debug=False,++train.extra_loss_lambda=1,++train.num_epochs=60,++train.save_model=last,++train.seed=2025,++train.tps_prob=0.2,dataset=morphem70k_v2_12channels,hardware=dp,model=dichavit,tag=chammi_demo
+    id: ???
+    num: ???
+    config_name: chammi_cfg
+    env_set: {}
+    env_copy: []
+    config:
+      override_dirname:
+        kv_sep: '='
+        item_sep: ','
+        exclude_keys: []
+  runtime:
+    version: 1.3.2
+    version_base: '1.3'
+    cwd: /projectnb/cs598/students/ayak/diverse_channel_vit
+    config_sources:
+    - path: hydra.conf
+      schema: pkg
+      provider: hydra
+    - path: /projectnb/cs598/students/ayak/diverse_channel_vit/configs
+      schema: file
+      provider: main
+    - path: ''
+      schema: structured
+      provider: schema
+    output_dir: ???
+    choices:
+      attn_pooling: null
+      eval: null
+      hardware: dp
+      logging: null
+      data_chunk: null
+      dataset: morphem70k_v2_12channels
+      optimizer: null
+      scheduler: null
+      model: dichavit
+      train: null
+      hydra/env: default
+      hydra/callbacks: null
+      hydra/job_logging: default
+      hydra/hydra_logging: default
+      hydra/hydra_help: default
+      hydra/help: default
+      hydra/sweeper: basic
+      hydra/launcher: basic
+      hydra/output: default
+  verbose: false
+model:
+  name: dichavit
+  pretrained: false
+  pretrained_model_name: small
+  in_dim: null
+  num_classes: null
+  pooling: avg
+  temperature: 0.07
+  learnable_temp: false
+  unfreeze_last_n_layers: -1
+  unfreeze_first_layer: true
+  init_first_layer: null
+  reset_last_n_unfrozen_layers: false
+  enable_sample: true
+  in_channel_names: FILL_LATER
+  new_channel_inits:
+  - zero
+  use_channelvit_channels: true
+  patch_size: 16
+  orthogonal_channel_emb_init: true
+  dropout_tokens_hcs: none
+  freeze_channel_emb: false
+  keep_rate: null
+  block_type: block
+  hcs_sampling: lowest_cosine_prob
+  hcs_sampling_temp: 0.1
+  proxy_loss_lambda: 0.1
+  ortho_loss_v1_lambda: 1
+  drop_path_rate: 0.0
+  gamma_s: 0.5
+  gamma_d: 2
+  reverse_pos_pairs: true
+  use_square: false
+dataset:
+  name: morphem70k
+  img_size: 224
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI/
+  file_name: /projectnb/cs598/students/ayak/diverse_channel_vit/metadata/morphem70k_v2.csv
+  in_channel_names:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+hardware:
+  num_workers: 4
+  device: cuda
+  multi_gpus: DataParallel
+tag: chammi_demo
+optimizer:
+  params:
+    lr: 4.0e-05
+train:
+  num_epochs: 60
+  save_model: last
+  batch_size: 64
+  debug: false
+  tps_prob: 0.2
+  extra_loss_lambda: 1
+  seed: 2025
+  checkpoints: /projectnb/cs598/students/ayak/multimodal_tests/checkpoints
+eval:
+  batch_size: 256
+  every_n_epochs: 6
+  skip_eval_first_epoch: false
+  dest_dir: /projectnb/cs598/students/ayak/multimodal_tests/results/multimodal_tests_2025-03-14_10-09-13/results
+  feature_dir: /projectnb/cs598/students/ayak/multimodal_tests/features/multimodal_tests_2025-03-14_10-09-13/features
+logging:
+  wandb:
+    run_name: C-dichavit
+    project: dichavit_test
+    entity: ayak-boston-university

@@ -1,0 +1,117 @@
+model:
+  name: channelvit_adapt
+  pretrained: false
+  pretrained_model_name: small
+  in_dim: 1
+  num_classes: 4
+  temperature: 0.11111
+  learnable_temp: true
+  patch_size: 16
+  use_channelvit_channels: true
+  new_channel_inits:
+  - replicate
+  in_channel_names:
+  - nucleus
+  enable_sample: false
+  drop_path_rate: 0.1
+  img_size:
+  - 224
+  orthogonal_channel_emb_init: true
+  freeze_channel_emb: false
+  block_type: block
+  init_first_layer: replicate
+  dropout_tokens_hcs: 0.0
+tag: null
+dataset:
+  name: morphem70k
+  img_size: 224
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI
+  file_name: ../morphem70k_v2.csv
+  in_channel_names:
+  - nucleus
+data_chunk:
+  chunks:
+  - HPA:
+    - 5
+  - CP:
+    - 5
+  - Allen:
+    - 5
+train:
+  batch_size: 64
+  num_epochs: 60
+  use_amp: false
+  checkpoints: unimodal_tests/checkpoints
+  save_model: last
+  verbose_batches: 50
+  debug: false
+  extra_loss_lambda: 0.0
+  adaptive_interface_lr: null
+  training_chunks: HPA
+  miro: false
+  miro_lr_mult: 10.0
+  miro_ld: 0.01
+  swa: false
+  swad: false
+  swa_lr: 0.05
+  swa_start: 5
+  batch_strategy: random_instance
+  resume_train: false
+  resume_model: null
+  clip_grad_norm: null
+  adaptive_interface_epochs: 0
+  ssl: false
+  ssl_lambda: 0.0
+  plot_attn: false
+  seed: null
+  tps_prob: 0.0
+hardware:
+  multi_gpus: null
+  device: cuda
+  num_workers: 4
+logging:
+  wandb:
+    use_wandb: false
+    project_name: single_channel_adapt
+    log_freq: 50
+    run_name: single_channel_train
+  scc_jobid: null
+  use_py_log: true
+optimizer:
+  name: adamw
+  params:
+    lr: 4.0e-05
+    weight_decay: 0.05
+    weight_decay_end: -1
+scheduler:
+  name: cosine
+  params:
+    t_initial: 60
+    warmup_t: 5
+    warmup_lr_init: 1.0e-06
+    lr_min: 1.0e-06
+  convert_to_batch: false
+eval:
+  batch_size: null
+  dest_dir: snapshots/results/{FOLDER_NAME}/results
+  feature_dir: snapshots/feat_outputs/{FOLDER_NAME}/features
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI
+  meta_csv_file: enriched_meta.csv
+  classifier: knn
+  classifiers:
+  - knn
+  feature_file: features.npy
+  use_gpu: true
+  knn_metrics:
+  - cosine
+  clean_up: true
+  umap: false
+  only_eval_first_and_last: false
+  skip_eval_for_debug: true
+  every_n_epochs: 5
+  eval_subset_channels: false
+  channel_combinations: null
+  eval_chunks:
+  - HPA
+  - CP
+  - Allen

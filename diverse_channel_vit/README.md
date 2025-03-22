@@ -1,6 +1,4 @@
-DISCLAIMER: THIS IS THE README OF THE ORIGINAL PAPER, NOT WRITTEN BY THE OWNERS OF THIS GITHUB REPO
-
-A Pytorch implementation for Diverse Channel ViT (DiChaViT) in the [paper](https://arxiv.org/pdf/2405.16419). This code was tested using Pytorch 2.4.1+cu121 and Python 3.10.
+A Pytorch implementation for Diverse Channel ViT (DiChaViT) in our [paper](https://arxiv.org/pdf/2405.16419). This code was tested using Pytorch 2.4.1+cu121 and Python 3.10.
 
 
 If you find our work useful, please consider citing:
@@ -69,7 +67,7 @@ aws s3 cp s3://insitro-research-2023-context-vit/jumpcp/BR00116991.pq jumpcp/BR0
 ```
 
 ## 3. So2Sat 
-We use the city split (version 1) of the So2Sat dataset. The dataset can be downloaded by running
+We use the city split (version 2) of the So2Sat dataset. The dataset can be downloaded by running
 
 ```
 wget --no-check-certificate https://dataserv.ub.tum.de/s/m1454690/download?path=%2F&files=validation.h5&downloadStartSecret=p5bjok57fil

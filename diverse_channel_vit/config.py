@@ -227,6 +227,7 @@ class Wandb:
     num_images_to_log: int
     log_imgs_every_n_epochs: int
     project_name: str
+    entity: str = "ayak-boston-university"
     run_name: Optional[str] = None
 
 

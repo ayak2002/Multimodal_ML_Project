@@ -1,0 +1,166 @@
+train:
+  batch_strategy: random_instance
+  resume_train: false
+  resume_model: null
+  use_amp: false
+  checkpoints: /projectnb/cs598/students/ayak/multimodal_tests/checkpoints
+  save_model: last
+  clip_grad_norm: null
+  batch_size: 64
+  num_epochs: 60
+  verbose_batches: 50
+  seed: 2025
+  debug: false
+  adaptive_interface_epochs: 0
+  adaptive_interface_lr: null
+  swa: false
+  swad: false
+  swa_lr: 0.05
+  swa_start: 5
+  miro: false
+  miro_lr_mult: 10.0
+  miro_ld: 0.01
+  tps_prob: 0.2
+  ssl: false
+  ssl_lambda: 0.0
+  training_chunks: null
+  extra_loss_lambda: 1
+  plot_attn: false
+model:
+  name: dichavit
+  pretrained: false
+  pretrained_model_name: small
+  in_dim: null
+  num_classes: null
+  pooling: avg
+  temperature: 0.07
+  learnable_temp: false
+  unfreeze_last_n_layers: -1
+  unfreeze_first_layer: true
+  init_first_layer: null
+  reset_last_n_unfrozen_layers: false
+  enable_sample: true
+  in_channel_names: FILL_LATER
+  new_channel_inits:
+  - zero
+  use_channelvit_channels: true
+  patch_size: 16
+  orthogonal_channel_emb_init: true
+  dropout_tokens_hcs: none
+  freeze_channel_emb: false
+  keep_rate: null
+  block_type: block
+  hcs_sampling: lowest_cosine_prob
+  hcs_sampling_temp: 0.1
+  proxy_loss_lambda: 0.1
+  ortho_loss_v1_lambda: 1
+  drop_path_rate: 0.0
+  gamma_s: 0.5
+  gamma_d: 2
+  reverse_pos_pairs: true
+  use_square: false
+scheduler:
+  name: cosine
+  convert_to_batch: false
+  params:
+    t_initial: FILL_LATER
+    lr_min: 1.0e-06
+    cycle_mul: 1.0
+    cycle_decay: 0.5
+    cycle_limit: 1
+    warmup_t: 3
+    warmup_lr_init: 1.0e-05
+    warmup_prefix: false
+    t_in_epochs: true
+    noise_range_t: null
+    noise_pct: 0.67
+    noise_std: 1.0
+    noise_seed: 42
+    k_decay: 1.0
+    initialize: true
+optimizer:
+  name: adamw
+  params:
+    lr: 4.0e-05
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    weight_decay: 5.0e-05
+    amsgrad: false
+dataset:
+  name: morphem70k
+  img_size: 224
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI/
+  file_name: /projectnb/cs598/students/ayak/diverse_channel_vit/metadata/morphem70k_v2.csv
+  in_channel_names:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+data_chunk:
+  chunks:
+  - Allen:
+    - nucleus
+    - membrane
+    - protein
+  - HPA:
+    - microtubules
+    - protein
+    - nucleus
+    - er
+  - CP:
+    - nucleus
+    - er
+    - rna
+    - golgi
+    - mito
+logging:
+  wandb:
+    use_wandb: true
+    log_freq: 5000
+    run_name: C-dichavit
+    num_images_to_log: 0
+    log_imgs_every_n_epochs: 0
+    project_name: null
+    entity: ayak-boston-university
+    tag: null
+    project: dichavit_test
+  use_py_log: false
+  scc_jobid: null
+hardware:
+  num_workers: 4
+  device: cuda
+  multi_gpus: DataParallel
+eval:
+  batch_size: 256
+  dest_dir: /projectnb/cs598/students/ayak/multimodal_tests/results/multimodal_tests_2025-03-14_10-09-13/results
+  feature_dir: /projectnb/cs598/students/ayak/multimodal_tests/features/multimodal_tests_2025-03-14_10-09-13/features
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI
+  meta_csv_file: FILL_LATER
+  classifiers:
+  - knn
+  classifier: PLACE_HOLDER
+  feature_file: features.npy
+  use_gpu: true
+  knn_metric: PLACE_HOLDER
+  knn_metrics:
+  - cosine
+  clean_up: true
+  umap: false
+  only_eval_first_and_last: false
+  skip_eval_for_debug: false
+  every_n_epochs: 6
+  eval_subset_channels: false
+  channel_combinations: null
+  skip_eval_first_epoch: false
+attn_pooling: {}
+tag: chammi_demo

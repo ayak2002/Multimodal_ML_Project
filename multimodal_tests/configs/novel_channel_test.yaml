@@ -1,0 +1,76 @@
+defaults:
+  - train: random_instance
+  - model: dichavit
+  - scheduler: cosine
+  - optimizer: adamw
+  - dataset: morphem70k_v2
+  - data_chunk: morphem70k
+  - logging: wandb
+  - hardware: default
+  - eval: default
+  - attn_pooling: none
+  - _self_
+
+# Train on Allen and HPA, test on CP (which has novel channels)
+train:
+  training_chunks: "Allen_HPA"  # Train on both Allen and HPA
+  num_epochs: 50
+  batch_size: 32
+  save_model: "last"
+  checkpoints: "/projectnb/cs598/projects/Modalities_Robustness/multimodal_tests/checkpoints"
+
+# Novel channel initialization strategies to test
+model:
+  name: dichavit
+  new_channel_inits: ["avg_2", "replicate", "zero"]  # Test different initialization strategies
+  in_channel_names: ["er", "golgi", "membrane", "microtubules", "mito", "nucleus", "protein", "rna"]
+
+# Data chunk configuration
+data_chunk:
+  chunks:
+    - Allen:
+      - nucleus
+      - membrane
+      - protein
+    - HPA:
+      - microtubules
+      - protein
+      - nucleus
+      - er
+    - CP:
+      - nucleus
+      - er
+      - rna
+      - golgi
+      - mito
+
+# Evaluation configuration
+eval:
+  batch_size: 64
+  dest_dir: "/projectnb/cs598/students/ayak/multimodal_tests/results/{FOLDER_NAME}/results"
+  feature_dir: "/projectnb/cs598/students/ayak/multimodal_tests/features/{FOLDER_NAME}/features"
+  root_dir: "/projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI"
+  meta_csv_file: "enriched_meta.csv"
+  classifiers:
+    - knn
+  classifier: "knn"
+  feature_file: "features.npy"
+  use_gpu: True
+  knn_metrics:
+    - cosine
+  knn_metric: "cosine"
+  clean_up: True
+  umap: False
+  every_n_epochs: 5
+
+# Logging configuration
+logging:
+  wandb:
+    project_name: "dichavit_test"
+    entity: "ayak-boston-university"
+    tags: ["novel_channels", "cross_dataset"]
+
+# Hardware configuration
+hardware:
+  device: "cuda:0"
+  multi_gpus: "none"

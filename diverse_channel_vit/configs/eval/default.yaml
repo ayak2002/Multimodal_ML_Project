@@ -1,7 +1,7 @@
 batch_size: ~  ## None to auto set
 dest_dir: snapshots/results/{FOLDER_NAME}/results
 feature_dir: snapshots/feat_outputs/{FOLDER_NAME}/features
-root_dir: /projectnb/morphem/data_70k/ver2/morphem_70k_version2/
+root_dir: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/CHAMMI
 meta_csv_file: FILL_LATER
 classifiers:
   - knn

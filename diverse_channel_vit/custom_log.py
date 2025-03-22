@@ -45,7 +45,7 @@ def get_py_logger(dataset_name: str, job_id: str = None):
     return logger  # , logger_name, logger_path
 
 
-def init_wandb(args: MyConfig, job_id, project_name, log_freq: int, model=None):
+def init_wandb(args: MyConfig, job_id, project_name, log_freq: int, model=None, entity="chammi"):
     # wandb.run.dir
     # https://docs.wandb.ai/guides/track/advanced/save-restore
 
@@ -75,7 +75,7 @@ def init_wandb(args: MyConfig, job_id, project_name, log_freq: int, model=None):
         )
     wandb.init(
         project=project_name,
-        entity="chammi",
+        entity=entity,
         name=watermark,
         settings=wandb.Settings(start_method="fork"),
     )
@@ -145,6 +145,7 @@ class MyLogging:
                 model=model,
                 job_id=job_id,
                 log_freq=log_freq,
+                entity=args.logging.wandb.entity,
             )
 
     def info(

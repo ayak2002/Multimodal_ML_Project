@@ -1,0 +1,77 @@
+tag: unimodal_test
+dataset:
+  name: morphem70k
+  root_dir: /projectnb/cs598/projects/Modalities_Robustness/diverse_channel_vit/metadata
+  img_size: 224
+  file_name: morphem70k_v2.csv
+  in_channel_names:
+  - Nucleus
+  - Membrane
+data_chunk:
+  chunks:
+  - HPA:
+    - nucleus
+  - CP:
+    - membrane
+  - Allen:
+    - dna
+train:
+  batch_size: 4
+  num_epochs: 1
+  adaptive_interface_epochs: 0
+  resume_train: false
+  save_model: last
+  debug: true
+  seed: 42
+  use_amp: false
+  swa: false
+  swad: false
+  swa_start: 0
+  swa_lr: 0.05
+  miro: false
+  miro_ld: 0.0
+  miro_lr_mult: 1.0
+  clip_grad_norm: null
+  extra_loss_lambda: 0.0
+  ssl: false
+  adaptive_interface_lr: 0.001
+  checkpoints: outputs/checkpoints
+  tps_prob: 0.0
+  training_chunks:
+  - HPA
+  - CP
+eval:
+  batch_size: 32
+  every_n_epochs: 1
+  eval_subset_channels: false
+  meta_csv_file: /projectnb/cs598/projects/Modalities_Robustness/channel_adaptive_models/chammi_dataset/morphem70k_v2.csv
+hardware:
+  device: cuda
+  multi_gpus: null
+  num_workers: 4
+model:
+  name: ViT
+  num_classes: 10
+  img_size: 224
+  init_first_layer: true
+  learnable_temp: false
+  pooling_channel_type: null
+  pretrained: false
+  new_channel_inits:
+  - zero
+  - random
+optimizer:
+  name: Adam
+  params:
+    lr: 0.001
+    weight_decay: 0.0001
+scheduler:
+  name: CosineAnnealingLR
+  params:
+    T_max: 5
+    eta_min: 1.0e-05
+logging:
+  scc_jobid: null
+  wandb:
+    project_name: unimodal_test
+    use_wandb: false
