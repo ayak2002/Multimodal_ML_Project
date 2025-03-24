@@ -10,15 +10,15 @@ cd /projectnb/cs598/students/ayak/diverse_channel_vit
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 
 # Set Weights & Biases directory to our multimodal_tests directory
-export WANDB_DIR=/projectnb/cs598/students/ayak/multimodal_tests/wandb
-export WANDB_API_KEY=7a5ef7f1e907d577d3ccf8e33d46b70d5e1cc4f7
+# export WANDB_DIR=YOUR WANDB DIR HERE
+# export WANDB_API_KEY=YOUR WANDB KEY HERE
 
 #export WANDB_MODE=disabled
 mkdir -p $WANDB_DIR
 
 # Use your wandb account with the correct entity
-export WANDB_PROJECT=dichavit_test
-export WANDB_ENTITY=ayak-boston-university
+# export WANDB_PROJECT=YOUR WANDB PROJECT NAME HERE
+# export WANDB_ENTITY=YOUR WANDB ENTITY HERE
 
 python main.py -m -cn chammi_cfg \
   model=dichavit \
@@ -55,5 +55,5 @@ python main.py -m -cn chammi_cfg \
   ++hydra.run.dir=/projectnb/cs598/students/ayak/multimodal_tests/hydra_output/${TIMESTAMP} \
   ++hydra.sweep.dir=/projectnb/cs598/students/ayak/multimodal_tests/hydra_output/multirun/${TIMESTAMP} \
   ++hardware.num_workers=4 \
-  ++logging.wandb.project=dichavit_test \
-  ++logging.wandb.entity=ayak-boston-university
+  #++logging.wandb.project=YOUR WANDB PROJECT HERE \
+  #++logging.wandb.entity=YOUR WANDB ENTITY HERE
