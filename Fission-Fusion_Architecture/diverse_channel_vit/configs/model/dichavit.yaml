@@ -1,0 +1,42 @@
+name: dichavit
+pretrained: False
+pretrained_model_name: "small"  ## https://github.com/facebookresearch/dinov2
+in_dim: ~  # autofill later if None
+num_classes: ~ # autofill later if None
+pooling: "avg"
+temperature: 0.11111
+learnable_temp: False
+unfreeze_last_n_layers: -1
+unfreeze_first_layer: True
+init_first_layer: ~ ## not used
+reset_last_n_unfrozen_layers: False
+enable_sample: False
+in_channel_names: FILL_LATER
+new_channel_inits: ~ # ["avg_2", "replicate", "avg_2_not_in_chunk", "avg_3", "avg_3_not_in_chunk", "zero", "ignore"]
+use_channelvit_channels: True
+patch_size: 16
+orthogonal_channel_emb_init: False
+dropout_tokens_hcs: none
+freeze_channel_emb: False
+keep_rate: ~
+block_type: block
+hcs_sampling: none
+hcs_sampling_temp: 0.1
+proxy_loss_lambda: 0
+ortho_loss_v1_lambda: 0
+drop_path_rate: 0.0
+gamma_s: 1.0
+gamma_d: 0.5
+reverse_pos_pairs: False
+use_square: False
+use_fission_module: False  # If True, split features into shared/specific paths after patch embedding
+fission_hidden_dim: 0      # 0 means default to input dim
+fission_shared_dim: 0      # 0 means default to input dim // 2
+fission_specific_dim: 0    # 0 means default to input dim // 2
+use_parallel_paths: False  # If True, process shared and specific features in parallel transformer paths
+share_transformer_weights: True  # If True, use the same transformer blocks for both paths
+use_fusion_module: False   # If True, combine shared and specific features before classification
+fusion_hidden_dim: 0       # 0 means default to shared_dim + specific_dim
+fusion_out_dim: 0          # 0 means default to original embed_dim
+feature_separation_lambda: 0.0  # Weight for feature separation loss (cosine similarity between shared and specific)
+adversarial_lambda: 0.0         # Weight for adversarial channel loss (to make shared features channel-agnostic)

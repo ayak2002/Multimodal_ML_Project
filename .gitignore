@@ -48,4 +48,12 @@ wandb/
 **/visualization/
 **/checkpoints/
 **/results/
-**/output/ 
+**/output/
+
+# Specific large files in our paper implementation directories
+Fully_Attentional_Networks/diverse_channel_vit/snapshots/
+Fully_Attentional_Networks/attention_logs/
+Fully_Attentional_Networks/checkpoints/
+Fission-Fusion_Architecture/multimodal_tests/checkpoints/
+Fission-Fusion_Architecture/multimodal_tests/separate_features/
+Fission-Fusion_Architecture/multimodal_tests/snapshots/
