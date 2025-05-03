@@ -20,7 +20,7 @@ for f in os.listdir(attn_log_dir):
             print("Skipping file:", f, "due to error:", e)
 
 attn_files.sort()
-print("✅ Matching attention logs:", attn_files)
+print("mtching attention logs:", attn_files)
 
 if attn_files:
     all_weights = []
@@ -43,6 +43,6 @@ if attn_files:
 
     save_path = os.path.join(attn_log_dir, f"avg_attention_plot_{today_str}_{target_hour}h.png")
     plt.savefig(save_path)
-    print(f"✅ Plot saved to: {save_path}")
+    print(f"Plot saved to: {save_path}")
 else:
-    print("⚠️ No matching attention log files found.")
+    print("no matching attention log files found.")
