@@ -721,7 +721,7 @@ class Trainer:
                     eval_cfg["use_gpu"],
                     knn_metric,
                     #dataset,  # quick hack to run benchmark on only 1 dataset
-                    features_path="/projectnb/cs598/projects/Modalities_Robustness/adaptive_channel_strategy/snapshots/feat_outputs/2025-Apr-09_seed420301_sccid/features/CP/features.npy",  # <--- This line is KEY
+                    features_path="/projectnb/cs598/projects/Modalities_Robustness/adaptive_channel_strategy/snapshots/feat_outputs/2025-Apr-09_seed420301_sccid/features/CP/features.npy",  # is line is KEY
                     datasets=eval_chunks
                 )
                 ## log results
@@ -827,7 +827,7 @@ class Trainer:
                 # print("DEBUG: type(x) =", type(x))
                 if isinstance(x, dict):
                     x = x["x"]
-                print("✅ Image shape after extraction:", x.shape)
+                print("Image shape after extraction:", x.shape)
                 if channel_combinations is not None:
                     print("debug:", type(x))
                     x = x[:, channel_combinations, :, :].clone() #commented 4/7
