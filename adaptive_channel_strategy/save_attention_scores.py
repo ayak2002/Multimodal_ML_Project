@@ -29,4 +29,4 @@ def save_attention_scores(scores, chunk_name, epoch, selected_channels, base_dir
         for row in scores:
             writer.writerow([epoch, chunk_name, str(selected_channels)] + row.tolist())
 
-    print(f"✅ Saved attention scores to: {out_path}")
+    print(f"Saved attention scores to: {out_path}")
